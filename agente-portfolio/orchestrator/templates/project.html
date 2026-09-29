@@ -1,0 +1,74 @@
+{% extends "base.html" %}{% from "_macros.html" import status %}
+{% block title %}{{ project.name }}{% endblock %}
+{% block content %}
+<section>
+  <div class="section-head">
+    <div><h1>{{ project.name }}</h1><p class="dim">{{ project.description }}</p></div>
+    {{ status(project.status) }}
+  </div>
+  <dl class="facts">
+    <dt>Produção</dt><dd>{% if project.prod_tag %}<a href="{{ cfg.url(project.slug, 'production') }}" target="_blank" rel="noopener">{{ cfg.host(project.slug, 'production') }}</a> <span class="mono dim">{{ project.prod_tag }}</span>{% else %}—{% endif %}</dd>
+    <dt>Staging</dt><dd>{% if project.staging_tag %}<a href="{{ cfg.url(project.slug, 'staging') }}" target="_blank" rel="noopener">{{ cfg.host(project.slug, 'staging') }}</a> <span class="mono dim">{{ project.staging_tag }}</span>{% else %}—{% endif %}</dd>
+    <dt>Repositório</dt><dd>{% if project.repo_url %}<a href="{{ project.repo_url }}" target="_blank" rel="noopener">{{ project.repo_url }}</a>{% else %}publicado no primeiro deploy{% endif %}</dd>
+    <dt>Stack</dt><dd>{{ project.stack or '—' }}</dd>
+    <dt>Tags</dt><dd>{% for t in project.tags or [] %}<span class="pill">{{ t }}</span> {% else %}—{% endfor %}</dd>
+    {% if project.figma_url %}<dt>Figma</dt><dd><a href="{{ project.figma_url }}" target="_blank" rel="noopener">abrir arquivo de design ↗</a></dd>{% endif %}
+    <dt>Monitor</dt><dd class="mono">{{ health or 'sem leitura ainda' }}</dd>
+  </dl>
+  <div class="actions">
+    {% if project.prev_prod_tag %}
+    <form method="post" action="/projects/{{ project.id }}/rollback" onsubmit="return confirm('Voltar produção para {{ project.prev_prod_tag }}?')">
+      <button class="danger">Rollback para {{ project.prev_prod_tag }}</button></form>
+    {% endif %}
+    <form method="post" action="/projects/{{ project.id }}/visibility">
+      <button>{{ 'Ocultar do' if project.public else 'Mostrar no' }} portfólio público</button></form>
+  </div>
+</section>
+
+<section class="two">
+  <form method="post" action="/projects/{{ project.id }}/jobs" class="card">
+    <h2>Pedir mudança</h2>
+    <input type="hidden" name="type" value="change">
+    <textarea name="request" rows="5" required placeholder="Nova feature, ajuste de layout, atualização…"></textarea>
+    <button class="primary">Enviar</button>
+  </form>
+  <form method="post" action="/projects/{{ project.id }}/jobs" class="card">
+    <h2>Relatar problema</h2>
+    <input type="hidden" name="type" value="incident">
+    <textarea name="request" rows="5" required placeholder="O que acontece, onde, desde quando…"></textarea>
+    <button>Abrir incidente</button>
+  </form>
+</section>
+
+<section>
+  <h2>Variáveis de ambiente</h2>
+  <p class="dim">Declaradas pelo projeto em <span class="mono">.env.example</span>: {{ declared|join(', ') or 'nenhuma' }}.
+  Os valores ficam fora do alcance do agente. Uma linha <span class="mono">NOME=</span> vazia apaga a variável.</p>
+  <div class="two">
+  {% for env in ['staging', 'production'] %}
+    <form method="post" action="/projects/{{ project.id }}/secrets/{{ env }}" class="card">
+      <h3>{{ env }}</h3>
+      <p class="mono dim">definidas: {{ keys[env]|join(', ') or 'nenhuma' }}</p>
+      <textarea name="content" rows="4" placeholder="LLM_API_KEY=…" autocomplete="off" spellcheck="false"></textarea>
+      <button>Salvar</button>
+    </form>
+  {% endfor %}
+  </div>
+</section>
+
+<section>
+  <h2>Histórico</h2>
+  <table>
+    <thead><tr><th>#</th><th>Tipo</th><th>Pedido</th><th>Fase</th><th>Estado</th><th>Criado</th></tr></thead>
+    <tbody>
+    {% for j in jobs %}
+      <tr onclick="location='/jobs/{{ j.id }}'">
+        <td class="mono">{{ j.id }}</td><td>{{ TYPE.get(j.type, j.type) }}</td>
+        <td class="clip">{{ j.request[:120] }}</td><td>{{ PHASE.get(j.phase, j.phase) }}</td>
+        <td>{{ status(j.status) }}</td><td class="mono dim">{{ j.created_at[:16].replace('T', ' ') }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

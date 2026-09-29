@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Harness{% endblock %}
+{% block content %}
+<section>
+  <h1>Harness</h1>
+  <p class="dim">O que guia e verifica cada agente. Skills e plugins vêm de <span class="mono">harness/catalog.toml</span>;
+  cada papel recebe só o que serve para a etapa dele, filtrado pelas tags da stack do projeto.
+  Figma: <strong>{{ 'habilitado' if figma else 'desabilitado' }}</strong>.</p>
+</section>
+
+<section>
+  <h2>Skills e plugins por papel</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Item</th><th>Fonte</th>{% for r in roles %}<th>{{ r }}</th>{% endfor %}<th>Tags</th></tr></thead>
+    <tbody>
+    {% for row in rows %}
+      <tr title="{{ row.description }}" class="{{ '' if row.available else 'missing' }}">
+        <td><span class="mono">{{ row.name }}</span>{% if row.kind == 'plugin' %} <span class="pill">plugin</span>{% endif %}{% if not row.available %} <span class="pill pill-failed">não baixado</span>{% endif %}</td>
+        <td class="dim">{{ row.source }}</td>
+        {% for r in roles %}<td class="cell">{% if r in row.roles %}{{ '●' if r in row.preload else '○' }}{% endif %}</td>{% endfor %}
+        <td class="dim">{{ row.tags|join(', ') }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  <p class="dim">● carregada por inteiro no início da sessão · ○ disponível (o agente invoca quando precisa). Passe o mouse para ver a descrição.</p>
+</section>
+
+<section class="two">
+  <div>
+    <h2>Servidores MCP</h2>
+    <table>
+      <thead><tr><th>Servidor</th><th>Escopo</th><th>Papéis</th><th>Estado</th></tr></thead>
+      <tbody>{% for m in mcps %}<tr><td class="mono">{{ m.name }}</td><td>{{ m.scope }}</td><td>{{ m.roles|join(', ') }}{% for role, tools in m.deny.items() %}<br><span class="dim">{{ role }}: só leitura</span>{% endfor %}</td><td>{{ 'ativo' if m.enabled else 'desabilitado' }}</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+  <div>
+    <h2>Fontes externas (fixadas por commit)</h2>
+    <table>
+      <thead><tr><th>Fonte</th><th>Commit</th><th>Licença</th></tr></thead>
+      <tbody>{% for s in sources %}<tr><td><a href="https://github.com/{{ s.repo }}/tree/{{ s.ref }}" target="_blank" rel="noopener">{{ s.repo }}</a></td><td class="mono">{{ s.ref[:10] }}</td><td class="dim">{{ s.license }}</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

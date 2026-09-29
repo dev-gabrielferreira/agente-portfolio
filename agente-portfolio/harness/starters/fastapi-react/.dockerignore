@@ -1,0 +1,14 @@
+.git
+.venv
+.harness
+.claude
+tests
+data
+*.md
+!README.md
+.env*
+__pycache__
+mutants
+design
+frontend/node_modules
+frontend/dist

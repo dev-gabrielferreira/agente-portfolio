@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "additionalDirectories": [
+      "/srv/projetos"
+    ],
+    "allow": [
+      "Read",
+      "Edit",
+      "Write",
+      "Glob",
+      "Grep",
+      "WebSearch",
+      "WebFetch",
+      "Bash(git:*)",
+      "Bash(rg:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(mkdir:*)",
+      "Bash(python3:*)",
+      "Bash(python:*)",
+      "Bash(pip install:*)",
+      "Bash(uv:*)",
+      "Bash(pytest:*)",
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(curl:*)",
+      "Bash(jq:*)"
+    ],
+    "deny": [
+      "Read(~/.claude/.credentials.json)",
+      "Read(~/.claude.json)",
+      "Bash(*credentials*)",
+      "Bash(env)",
+      "Bash(printenv:*)",
+      "Edit(//srv/projetos/**)",
+      "Write(//srv/projetos/**)",
+      "Edit(.claude/**)",
+      "Write(.claude/**)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v rtk >/dev/null 2>&1 && rtk hook claude || true",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

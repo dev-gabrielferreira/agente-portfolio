@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "starter": "fastapi-react",
+  "summary": "FastAPI (API em /api) + React/TypeScript com Vite + SQLite em /data (um container)",
+  "start": "python -m uvicorn app.main:app --host 127.0.0.1 --port {port}",
+  "health": "/health",
+  "backend": {
+    "language": "python",
+    "framework": "fastapi",
+    "package": "app",
+    "asgi": "app.main:app",
+    "settings": "app.config:settings",
+    "openapi": true,
+    "domain": "app/services"
+  },
+  "frontend": {
+    "dir": "frontend",
+    "framework": "react",
+    "package_manager": "npm",
+    "lint": "npm run lint",
+    "typecheck": "npm run typecheck",
+    "test": "npm test",
+    "build": "npm run build"
+  },
+  "ui_paths": [
+    "frontend/src"
+  ],
+  "database": "sqlite"
+}

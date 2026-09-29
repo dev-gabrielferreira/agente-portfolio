@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Infra{% endblock %}
+{% block content %}
+<section>
+  <h1>Caddyfile principal</h1>
+  <p class="dim">O Jarvis propõe mudanças no seu Caddyfile (o arquivo que serve os seus outros sites). Nada é gravado
+  sem o código do seu app autenticador. Na aprovação o orquestrador valida no Caddy, guarda um backup, recarrega e
+  mede os sites: se o reload falhar ou um site que respondia antes parar, o arquivo anterior volta sozinho
+  (sites que já estavam fora do ar antes da mudança não entram nessa conta). Para aprovar pelo Jarvis, mande a ele
+  o código do autenticador e a <strong>confirmação</strong> da proposta (abaixo e no push do celular): ela prende a
+  aprovação a esta proposta.</p>
+  {% if not enabled %}<div class="flash">Propostas desligadas (<code>CADDY_PROPOSALS=false</code>).</div>{% endif %}
+  {% if error %}<div class="flash">Não consegui falar com o Caddy: {{ error }}</div>
+  {% elif writable == False %}<div class="flash">O Caddyfile está montado só leitura no container do Caddy: dá para propor,
+  mas não para aplicar. Tire o <code>:ro</code> do volume do Caddyfile (veja PRODUCAO.md).</div>{% endif %}
+  {% if not totp %}<div class="flash">Sem <code>ADMIN_TOTP_SECRET</code> nenhuma mudança pode ser aplicada. Rode o setup-jarvis.sh.</div>{% endif %}
+</section>
+<section>
+  <h2>Esperando você ({{ pending|length }})</h2>
+  {% for ch in pending %}
+  <div class="card">
+    <div class="card-head"><strong>#{{ ch.id }} · {{ ch.motivo }}</strong><span class="mono dim">{{ ch.created_at }}</span></div>
+    <p>Confirmação para o Jarvis: <code class="mono">{{ ch.confirmacao }}</code></p>
+    {% if ch.alerts %}<ul>{% for a in ch.alerts %}<li>⚠ {{ a }}</li>{% endfor %}</ul>{% endif %}
+    <pre class="doc">{{ ch.diff }}</pre>
+    <form method="post" action="/infra/{{ ch.id }}/aprovar">
+      <label>Código do autenticador <input name="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required></label>
+      <button class="primary">Aplicar</button>
+    </form>
+    <form method="post" action="/infra/{{ ch.id }}/rejeitar"><button>Rejeitar</button></form>
+  </div>
+  {% else %}
+  <div class="empty">Nenhuma proposta pendente. Peça ao Jarvis: <code>/caddy redireciona www para o domínio principal</code>.</div>
+  {% endfor %}
+</section>
+<section>
+  <h2>Histórico</h2>
+  {% for ch in history %}
+  <div class="card">
+    <div class="card-head"><span><span class="pill">{{ ch.status }}</span> #{{ ch.id }} · {{ ch.motivo }}</span>
+      <span class="mono dim">{{ ch.decided_at or ch.created_at }}</span></div>
+    {% if ch.result %}<p class="dim">{{ ch.result }}</p>{% endif %}
+    <details><summary>diff</summary><pre class="doc">{{ ch.diff }}</pre></details>
+    {% if ch.status == "aplicada" %}
+    <p class="dim">Confirmação para desfazer pelo Jarvis: <code class="mono">{{ ch.confirmacao }}</code></p>
+    <form method="post" action="/infra/{{ ch.id }}/desfazer">
+      <label>Código <input name="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required></label>
+      <button>Desfazer</button>
+    </form>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="empty">Nada ainda.</div>
+  {% endfor %}
+</section>
+{% endblock %}

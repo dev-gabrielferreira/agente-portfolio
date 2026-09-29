@@ -1,0 +1,17 @@
+{
+  "name": "agente-lsp",
+  "version": "1.0.0",
+  "description": "Servidores de linguagem (Pyright e TypeScript): diagnósticos de tipo entram no contexto após cada edição — sensor computacional em tempo real.",
+  "lspServers": {
+    "pyright": {
+      "command": "pyright-langserver",
+      "args": ["--stdio"],
+      "extensionToLanguage": {".py": "python", ".pyi": "python"}
+    },
+    "typescript": {
+      "command": "typescript-language-server",
+      "args": ["--stdio"],
+      "extensionToLanguage": {".ts": "typescript", ".tsx": "typescriptreact", ".js": "javascript", ".jsx": "javascriptreact"}
+    }
+  }
+}

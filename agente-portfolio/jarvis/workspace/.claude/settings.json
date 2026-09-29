@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "enabledMcpjsonServers": [
+    "agente"
+  ],
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "additionalDirectories": [
+      "/srv/projetos",
+      "/srv/conhecimento",
+      "/srv/jarvis/lab"
+    ],
+    "allow": [
+      "mcp__agente__resumo",
+      "mcp__agente__projeto",
+      "mcp__agente__nota_do_projeto",
+      "mcp__agente__jobs",
+      "mcp__agente__job",
+      "mcp__agente__log_do_job",
+      "mcp__agente__eventos",
+      "mcp__agente__novo_projeto",
+      "mcp__agente__mudar_projeto",
+      "mcp__agente__orientar_job",
+      "mcp__agente__pausar_job",
+      "mcp__agente__retomar_job",
+      "mcp__agente__caddyfile",
+      "mcp__agente__propostas_caddy",
+      "mcp__agente__propor_mudanca_caddy",
+      "mcp__agente__rejeitar_mudanca_caddy",
+      "mcp__agente__sessoes",
+      "mcp__agente__nova_sessao",
+      "mcp__agente__saida_da_sessao",
+      "mcp__agente__mensagem_para_sessao",
+      "mcp__agente__parar_sessao",
+      "Read(//srv/projetos/**)",
+      "Read(//srv/conhecimento/**)",
+      "Read(//srv/jarvis/lab/**)",
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "Bash(rg:*)",
+      "Bash(ls:*)",
+      "Bash(wc:*)",
+      "Bash(date:*)",
+      "WebSearch",
+      "WebFetch"
+    ],
+    "ask": [
+      "mcp__agente__adotar_projeto",
+      "mcp__agente__aprovar",
+      "mcp__agente__responder_perguntas",
+      "mcp__agente__pedir_ajustes",
+      "mcp__agente__cancelar_job",
+      "mcp__agente__rollback",
+      "mcp__agente__aprovar_mudanca_caddy",
+      "mcp__agente__desfazer_mudanca_caddy"
+    ],
+    "deny": [
+      "Read(~/.claude/.credentials.json)",
+      "Read(~/.claude.json)",
+      "Read(//srv/jarvis/home/.claude/.credentials.json)",
+      "Bash(*credentials*)",
+      "Bash(env:*)",
+      "Bash(printenv:*)",
+      "Edit(.claude/**)",
+      "Write(.claude/**)",
+      "Edit(CLAUDE.md)",
+      "Write(CLAUDE.md)",
+      "Edit(.mcp.json)",
+      "Write(.mcp.json)",
+      "Bash(claude --bg:*)",
+      "Bash(claude remote-control:*)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -P -m jarvis.hooks inicio",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -P -m jarvis.hooks eventos",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v rtk >/dev/null 2>&1 && rtk hook claude || true",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

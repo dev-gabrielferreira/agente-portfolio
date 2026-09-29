@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Novo projeto{% endblock %}
+{% block content %}
+<section class="narrow">
+  <h1>Novo projeto</h1>
+  <p class="dim">Descreva o que você quer: problema, público, dados, o que precisa funcionar, referências.
+  O agente vai fazer as perguntas que faltarem antes de escrever a spec.</p>
+  <form method="post" action="/new" class="card">
+    <label>Nome provisório (opcional) <input name="name" maxlength="80" placeholder="ex.: Painel de energia ONS"></label>
+    <label>Requisitos e necessidades
+      <textarea name="request" rows="12" required minlength="20" placeholder="Quero um sistema que…"></textarea>
+    </label>
+    <button class="primary">Enviar para o agente</button>
+  </form>
+
+  <h2>Adotar um projeto que já está no ar</h2>
+  <p class="dim">O agente clona o repositório, mapeia o projeto, adapta ao contrato de deploy sem mudar
+  o comportamento e cria testes. Tudo passa por staging e pela sua aprovação.</p>
+  <form method="post" action="/adopt" class="card">
+    <label>Nome <input name="name" required maxlength="80"></label>
+    <label>Repositório no GitHub <input name="repo_url" required placeholder="https://github.com/dev-gabrielferreira/…"></label>
+    <label>Instruções (opcional) <textarea name="request" rows="4" placeholder="ex.: hoje roda com o compose X em /opt/…; manter o domínio Y"></textarea></label>
+    <button>Adotar projeto</button>
+  </form>
+</section>
+{% endblock %}
