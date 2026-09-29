@@ -1,0 +1,3 @@
+{% macro status(s) -%}
+<span class="pill pill-{{ s }}"><span class="led led-{{ s }}"></span>{{ STATUS.get(s, s) }}</span>
+{%- endmacro %}

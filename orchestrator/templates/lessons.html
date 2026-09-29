@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Lições{% endblock %}
+{% block content %}
+<section>
+  <h1>Steering loop</h1>
+  <p class="dim">Depois de cada job, a retrospectiva propõe lições a partir do que deu errado. Você decide o que
+  entra no harness. Lições do tipo <strong>check</strong> e <strong>hook</strong> são as mais valiosas: implemente-as
+  como teste, lint ou hook (veja docs/MELHORIA.md) em vez de deixá-las só como texto.</p>
+</section>
+<section>
+  <h2>Propostas ({{ proposed|length }})</h2>
+  {% for l in proposed %}
+  <div class="card lesson">
+    <div class="card-head"><span class="pill">{{ l.kind }}</span><span class="mono dim">job #{{ l.job_id }}</span></div>
+    <form method="post" action="/lessons/{{ l.id }}/accept">
+      <textarea name="text" rows="2">{{ l.text }}</textarea>
+      <p class="dim">Evidência: {{ l.evidence }}</p>
+      <button class="primary">Incorporar</button>
+      <button formaction="/lessons/{{ l.id }}/reject">Descartar</button>
+    </form>
+  </div>
+  {% else %}
+  <div class="empty">Nenhuma proposta pendente.</div>
+  {% endfor %}
+</section>
+<section class="two">
+  <div><h2>LESSONS.md atual</h2><pre class="doc">{{ current }}</pre></div>
+  <div>
+    <h2>Decididas</h2>
+    <ul class="timeline">{% for l in decided %}<li><span class="pill">{{ l.status }}</span> {{ l.text }}</li>{% endfor %}</ul>
+  </div>
+</section>
+{% endblock %}

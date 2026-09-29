@@ -1,0 +1,23 @@
+# ---- Acrescente ao SEU Caddyfile (o que já serve os outros projetos) ----
+
+# 1) Painel do agente
+agent.gabrielfdev.com {
+	encode zstd gzip
+	# a API do Jarvis é só da rede interna do Docker (o Jarvis chama http://agente:8080 direto)
+	@api path /api/*
+	respond @api 404
+	reverse_proxy agente:8080
+}
+
+# 2) Sites que o agente cria (staging e produção de cada projeto)
+import /etc/caddy/sites-agente/*.caddy
+
+# ---- E no docker-compose do Caddy, acrescente ----
+#   volumes:
+#     - /srv/agente/caddy-sites:/etc/caddy/sites-agente:ro
+#   networks:
+#     - interna
+#     - agente-painel
+# networks:
+#   agente-painel:
+#     external: true

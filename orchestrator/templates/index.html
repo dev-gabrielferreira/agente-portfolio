@@ -1,0 +1,63 @@
+{% extends "base.html" %}{% from "_macros.html" import status %}
+{% block title %}Painel{% endblock %}
+{% block content %}
+{% if waiting %}
+<section class="attention">
+  <h2>Esperando você</h2>
+  {% for j in waiting %}
+  <a class="row" href="/jobs/{{ j.id }}">
+    <strong>{{ by_id[j.project_id].name if j.project_id in by_id else '#' ~ j.project_id }}</strong>
+    <span>{{ j.message }}</span><span class="arrow">→</span>
+  </a>
+  {% endfor %}
+</section>
+{% endif %}
+
+<section>
+  <div class="section-head"><h2>Projetos</h2><a class="button" href="/new">+ Novo projeto</a></div>
+  {% if not projects %}
+    <div class="empty">Nenhum projeto ainda. <a href="/new">Descreva o primeiro</a> ou adote um que já está no ar.</div>
+  {% else %}
+  <div class="grid">
+    {% for p in projects %}
+    <a class="card project" href="/projects/{{ p.id }}">
+      <div class="card-head">{{ status(p.status) }}<span class="mono dim">{{ p.slug }}</span></div>
+      <h3>{{ p.name }}</h3>
+      <p>{{ p.description or 'Sem descrição ainda.' }}</p>
+      <div class="meta mono">{% if p.prod_tag %}{{ cfg.host(p.slug, 'production') }}{% else %}ainda não publicado{% endif %}</div>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+
+<section>
+  <h2>Atividade</h2>
+  <table>
+    <thead><tr><th>#</th><th>Projeto</th><th>Tipo</th><th>Fase</th><th>Estado</th><th>Rodadas</th></tr></thead>
+    <tbody>
+    {% for j in jobs %}
+      <tr class="{{ 'live' if j.id == current else '' }}" onclick="location='/jobs/{{ j.id }}'">
+        <td class="mono">{{ j.id }}</td>
+        <td>{{ by_id[j.project_id].name if j.project_id in by_id else '—' }}</td>
+        <td>{{ TYPE.get(j.type, j.type) }}</td>
+        <td>{{ PHASE.get(j.phase, j.phase) }}</td>
+        <td>{{ status(j.status) }}</td>
+        <td class="mono">{{ j.fix_round }}</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="6" class="dim">Sem jobs.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="stats">
+  <div><span class="num">{{ metrics.done or 0 }}</span>jobs concluídos</div>
+  <div><span class="num">{{ '%.1f'|format(metrics.avg_rounds or 0) }}</span>rodadas de correção (média)</div>
+  <div><span class="num">{{ metrics.gate_fail or 0 }}</span>falhas de gate</div>
+  <div><span class="num">{{ metrics.eval_fail or 0 }}</span>reprovações do avaliador</div>
+  <div><span class="num">{{ metrics.rollbacks or 0 }}</span>rollbacks</div>
+  <div><a href="/lessons"><span class="num">{{ proposed }}</span>lições para revisar</a></div>
+</section>
+{% endblock %}

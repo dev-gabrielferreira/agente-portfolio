@@ -1,0 +1,206 @@
+{% extends "base.html" %}{% from "_macros.html" import status %}
+{% block title %}Job #{{ job.id }}{% endblock %}
+{% block content %}
+{% set flow = {
+  'create': ['init','discovery','spec','plan','design','build','gates','tests','staging','evaluate','review','production','publish','retro'],
+  'change': ['init','discovery','spec','plan','design','build','gates','tests','staging','evaluate','review','production','publish','retro'],
+  'incident': ['init','build','gates','tests','staging','evaluate','review','production','publish','retro'],
+  'adopt': ['init','build','gates','tests','staging','evaluate','review','production','publish','retro']}[job.type] %}
+{% set cur_phase = 'review' if job.phase == 'security' else job.phase %}
+<section id="job" data-job="{{ job.id }}" data-status="{{ job.status }}" data-phase="{{ job.phase }}">
+  <div class="section-head">
+    <div>
+      <p class="dim"><a href="/projects/{{ project.id }}">{{ project.name }}</a> · {{ TYPE.get(job.type) }} · job #{{ job.id }}</p>
+      {% set waiting_title = {'answers': 'Perguntas para você', 'spec_approval': 'Aprovação da spec e do plano', 'design_approval': 'Aprovação do design',
+          'deploy_approval': 'Aprovação do deploy', 'human': 'Precisa de você'} %}
+      <h1>{% if job.status == 'waiting' %}{{ waiting_title.get(job.waiting_for, 'Esperando você') }}{% elif job.status == 'done' %}Concluído{% else %}{{ PHASE.get(job.phase, job.phase)|capitalize }}{% endif %}</h1>
+    </div>
+    <div class="right">{{ status(job.status) }}<div class="mono dim">rodada {{ job.fix_round }} · ~US$ {{ '%.2f'|format(job.cost_usd) }} (estimativa)</div></div>
+  </div>
+  <ol class="flow">
+    {% set idx = flow.index(cur_phase) if cur_phase in flow else 0 %}
+    {% for ph in flow %}
+      <li class="{{ 'done' if loop.index0 < idx or job.status == 'done' else ('now' if loop.index0 == idx else '') }}">{{ PHASE.get(ph, ph) }}</li>
+    {% endfor %}
+  </ol>
+  <blockquote class="request">{{ job.request }}</blockquote>
+</section>
+
+{% if job.status == 'waiting' %}
+<section class="attention">
+  <h2>{{ job.message }}</h2>
+
+  {% if job.waiting_for == 'answers' %}
+    <p>{{ job.questions.understanding }}</p>
+    <form method="post" action="/jobs/{{ job.id }}/answers" class="card">
+      {% if job.type == 'create' %}
+      <div class="two">
+        <label>Nome do projeto <input name="name" value="{{ job.questions.project_name or project.name }}"></label>
+        <label>Endereço <span class="mono dim">(&lt;endereço&gt;.{{ cfg.domain }})</span>
+          <input name="slug" value="{{ project.slug }}" pattern="[a-z0-9][a-z0-9-]{1,38}[a-z0-9]"></label>
+      </div>
+      {% endif %}
+      {% for q in job.questions['items'] %}
+        <label class="question"><strong>{{ q.question }}</strong><span class="dim">{{ q.why }}</span>
+          <input name="q_{{ q.id }}" value="{{ q.default or '' }}" list="opts-{{ q.id }}" placeholder="Sua resposta (em branco = o agente decide)">
+          {% if q.options %}<datalist id="opts-{{ q.id }}">{% for o in q.options %}<option value="{{ o }}">{% endfor %}</datalist>
+          <span class="opts">{% for o in q.options %}<button type="button" class="chip" data-fill="q_{{ q.id }}">{{ o }}</button>{% endfor %}</span>{% endif %}
+        </label>
+      {% endfor %}
+      <button class="primary">Enviar respostas</button>
+    </form>
+
+  {% elif job.waiting_for == 'spec_approval' %}
+    {% set s = job.spec_summary %}
+    <p>{{ s.summary }}</p>
+    <div class="two">
+      <div class="card"><h3>Features</h3><ol>{% for f in s.features %}<li><span class="mono">{{ f.id }}</span> {{ f.title }}</li>{% endfor %}</ol></div>
+      <div class="card">
+        <h3>Variáveis de ambiente</h3>
+        <ul>{% for v in s.env_vars or [] %}<li><span class="mono">{{ v.name }}</span>{% if v.secret %} 🔑{% endif %} — {{ v.purpose }}</li>{% else %}<li class="dim">nenhuma</li>{% endfor %}</ul>
+        <h3>Riscos</h3><ul>{% for r in (s.risks or []) + ((s.plan or {}).risks or []) %}<li>{{ r }}</li>{% endfor %}</ul>
+      </div>
+    </div>
+    {% if s.plan %}
+    <div class="two">
+      <div class="card">
+        <h3>Plano técnico</h3>
+        <p>{{ s.plan.summary }}</p>
+        <p><strong>Stack:</strong> {{ s.plan.stack }} <span class="dim">· starter {{ s.plan.starter or 'nenhum' }}</span></p>
+        {% if s.plan.architecture %}<p class="dim">{{ s.plan.architecture }}</p>{% endif %}
+        <h3>Decisões (ADRs)</h3>
+        <ul>{% for a in s.plan.adrs or [] %}<li><strong>{{ a.title }}</strong> — {{ a.decision }}</li>{% else %}<li class="dim">nenhuma</li>{% endfor %}</ul>
+      </div>
+      <div class="card"><h3>Tickets</h3><ol>{% for t in s.plan.tickets or [] %}<li><span class="mono">{{ t.id }}</span> {{ t.title }}</li>{% endfor %}</ol></div>
+    </div>
+    {% endif %}
+    {% if job.questions and job.questions.history %}
+    <details><summary>Decisões da descoberta ({{ job.questions.history|length }} rodada(s))</summary>
+      {% for rnd in job.questions.history %}<h4>Rodada {{ rnd.round }}</h4><ul>
+        {% for q in rnd['items'] %}<li><strong>{{ q.question }}</strong> → {{ rnd.answers.get(q.id) or (q.default ~ ' (recomendação)') if q.default else rnd.answers.get(q.id) or 'o agente decide' }}</li>{% endfor %}
+      </ul>{% endfor %}
+    </details>
+    {% endif %}
+    <details><summary>SPEC.md completa</summary><pre class="doc">{{ spec }}</pre></details>
+    {% if plan %}<details><summary>docs/PLAN.md completo</summary><pre class="doc">{{ plan }}</pre></details>{% endif %}
+    <div class="two">
+      <form method="post" action="/jobs/{{ job.id }}/approve-spec"><button class="primary big">Aprovar e construir</button></form>
+      <form method="post" action="/jobs/{{ job.id }}/revise-spec" class="card">
+        <textarea name="text" rows="4" required placeholder="O que mudar na spec ou no plano…"></textarea>
+        <button>Pedir ajustes</button>
+      </form>
+    </div>
+
+  {% elif job.waiting_for == 'design_approval' %}
+    {% set d = job.design_report %}
+    <p>{{ d.concept }}</p>
+    {% if project.figma_url %}<p><a class="button" href="{{ project.figma_url }}" target="_blank" rel="noopener">Abrir no Figma ↗</a></p>{% endif %}
+    {% if d.figma_error %}<p class="dim">Figma: {{ d.figma_error }}</p>{% endif %}
+    <div class="shots">
+      {% for shot in design_shots %}
+      <a href="/jobs/{{ job.id }}/file?path={{ shot|urlencode }}" target="_blank" rel="noopener"><img src="/jobs/{{ job.id }}/file?path={{ shot|urlencode }}" alt="{{ shot.split('/')[-1] }}" loading="lazy"><span class="mono dim">{{ shot.split('/')[-1] }}</span></a>
+      {% else %}<p class="dim">Sem screenshots em .harness/evidence/design.</p>{% endfor %}
+    </div>
+    <p class="dim">Mockups navegáveis:
+      {% for sc in d.screens or [] %}<a href="/jobs/{{ job.id }}/file?path={{ sc.mockup|urlencode }}" target="_blank" rel="noopener">{{ sc.name }}</a>{{ ' · ' if not loop.last }}{% endfor %}</p>
+    <details><summary>DESIGN.md</summary><pre class="doc">{{ design_doc }}</pre></details>
+    <div class="two">
+      <form method="post" action="/jobs/{{ job.id }}/approve-design"><button class="primary big">Aprovar design e construir</button></form>
+      <form method="post" action="/jobs/{{ job.id }}/revise-design" class="card">
+        <textarea name="text" rows="4" required placeholder="O que mudar no design…"></textarea>
+        <button>Pedir ajustes</button>
+      </form>
+    </div>
+
+  {% elif job.waiting_for == 'deploy_approval' %}
+    {% set e = job.eval_report %}{% set sec = job.security_report %}
+    <p><a class="button" href="{{ cfg.url(project.slug, 'staging') }}" target="_blank" rel="noopener">Abrir staging ↗</a></p>
+    <div class="two">
+      <div class="card">
+        <h3>Avaliador</h3>
+        <div class="scores">{% for k, v in (e.scores or {}).items() %}<div><span class="num">{{ v }}</span>{{ k }}</div>{% endfor %}</div>
+        <p>{{ e.summary }}</p>
+        {% if e.findings %}<ul>{% for f in e.findings %}<li><span class="pill">{{ f.severity }}</span> {{ f.what }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+      <div class="card">
+        <h3>Segurança</h3><p>{{ sec.summary }}</p>
+        <ul>{% for f in sec.findings or [] %}<li><span class="pill">{{ f.severity }}</span> {{ f.title }} — {{ f.fix }}</li>{% endfor %}</ul>
+      </div>
+    </div>
+    {% set t = job.test_report %}{% set rv = job.review_report %}
+    <div class="two">
+      <div class="card">
+        <h3>Testes independentes</h3>
+        <div class="scores">
+          <div><span class="num">{{ t.tests_written if t.tests_written is not none else '—' }}</span>testes escritos</div>
+          <div><span class="num">{{ job.mutation_score if job.mutation_score is not none else '—' }}{{ '%' if job.mutation_score is not none }}</span>mutation score</div>
+          <div><span class="num">{{ job.tests_round }}</span>rodadas</div>
+          <div><span class="num">{{ (e.lighthouse or {}).accessibility or '—' }}</span>a11y (Lighthouse)</div>
+        </div>
+        <p>{{ t.summary }}</p>
+        {% if t.gaps %}<p class="dim">Lacunas: {{ t.gaps|join('; ') }}</p>{% endif %}
+      </div>
+      <div class="card">
+        <h3>Revisão de código</h3><p>{{ rv.summary }}</p>
+        <ul>{% for f in rv.findings or [] %}<li><span class="pill">{{ f.severity }}</span> {{ f.title }}{% if f.source %} <span class="dim">({{ f.source }})</span>{% endif %}</li>{% endfor %}</ul>
+      </div>
+    </div>
+    <details><summary>Mudanças (commits e arquivos)</summary><pre class="doc">{{ changes }}</pre></details>
+    <div class="two">
+      <form method="post" action="/jobs/{{ job.id }}/approve-deploy" onsubmit="return confirm('Publicar em produção?')"><button class="primary big">Aprovar e publicar em produção</button></form>
+      <form method="post" action="/jobs/{{ job.id }}/request-changes" class="card">
+        <textarea name="text" rows="4" required placeholder="O que ajustar antes de publicar…"></textarea>
+        <button>Pedir ajustes</button>
+      </form>
+    </div>
+
+  {% else %}
+    <div class="two">
+      <form method="post" action="/jobs/{{ job.id }}/retry"><button class="primary big">Tentar de novo</button></form>
+      <form method="post" action="/jobs/{{ job.id }}/request-changes" class="card">
+        <textarea name="text" rows="4" required placeholder="Orientação para o agente (vira achado e ele volta a construir)…"></textarea>
+        <button>Enviar orientação e continuar</button>
+      </form>
+    </div>
+  {% endif %}
+</section>
+{% endif %}
+
+{% if findings %}
+<details class="card" {{ 'open' if job.waiting_for == 'human' else '' }}><summary>Achados em aberto (.harness/NEXT_FINDINGS.md)</summary><pre class="doc">{{ findings }}</pre></details>
+{% endif %}
+
+{% if job.status in ['running', 'queued'] %}
+<section class="controls">
+  <form method="post" action="/jobs/{{ job.id }}/steer" class="grow">
+    <input name="text" required placeholder="Mensagem para o agente no meio da execução…">
+    <button>Enviar</button>
+  </form>
+  <form method="post" action="/jobs/{{ job.id }}/pause"><button>Pausar</button></form>
+  <form method="post" action="/jobs/{{ job.id }}/cancel" onsubmit="return confirm('Cancelar o job?')"><button class="danger">Cancelar</button></form>
+</section>
+{% endif %}
+
+<section>
+  <div class="section-head"><h2>Log ao vivo</h2><label class="dim"><input type="checkbox" id="follow" checked> acompanhar</label></div>
+  <pre id="log" class="log" data-live="{{ 'yes' if job.status in ['running', 'queued'] else 'no' }}">carregando…</pre>
+</section>
+
+<section class="two">
+  <div>
+    <h2>Linha do tempo</h2>
+    <ul class="timeline">
+      {% for ev in events|reverse %}
+      <li class="ev-{{ ev.kind }}"><span class="mono dim">{{ ev.ts[11:19] }}</span> {{ ev.message }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div>
+    <h2>Sessões</h2>
+    <table>
+      <thead><tr><th>Papel</th><th>OK</th><th>Turnos</th><th>Tempo</th></tr></thead>
+      <tbody>{% for s in sessions %}<tr title="{{ s.error }}"><td>{{ s.role }}</td><td>{{ '✔' if s.ok else '✖' }}</td><td class="mono">{{ s.turns }}</td><td class="mono">{{ (s.duration_s / 60)|round(1) }} min</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

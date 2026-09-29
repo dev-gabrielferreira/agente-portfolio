@@ -1,0 +1,473 @@
+# Catálogo do harness: skills, plugins e servidores MCP por papel e por stack.
+#
+# Feedforward sob medida: cada papel (planner, designer, builder, tester, evaluator, security,
+# reviewer, retro) recebe só o que ajuda na etapa dele, filtrado pelas tags da stack do projeto.
+#
+#   roles   = papéis que recebem o item
+#   tags    = ["all"] ou tags de stack; o item entra se o projeto tiver ao menos uma delas
+#             (ui, react, api, data, llm, auth, realtime, scheduler, mcp, charts, figma)
+#   preload = papéis que carregam o conteúdo completo da skill já no início da sessão
+#             (os demais veem só nome e descrição e invocam quando precisarem)
+#
+# Fontes externas ficam fixadas por commit e são baixadas para /srv/agente/vendor na instalação
+# (python -m orchestrator.skills sync). Para atualizar: troque o `ref`, rode o sync e rode os testes.
+
+# ------------------------------------------------------------------------------------ fontes
+[sources.local]
+path = "."
+
+[sources.anthropic-skills]
+repo = "anthropics/skills"
+ref = "33375500bcea98d610eb30ce10ac4e59b89c390d"
+license = "Apache-2.0"
+
+[sources.claude-plugins-official]
+repo = "anthropics/claude-plugins-official"
+ref = "fbe07fb6ce7d51d8e86ca6efdf050059894cdb80"
+license = "Apache-2.0"
+
+[sources.superpowers]
+repo = "obra/superpowers"
+ref = "8ca22dba9a94f28898bbce59f2537ff4d87c747d"
+license = "MIT"
+
+[sources.vercel]
+repo = "vercel-labs/agent-skills"
+ref = "063bee94c3f4df8453406c830b0a7df0f2860278"
+license = "MIT (declarada em cada skill)"
+
+[sources.trailofbits]
+repo = "trailofbits/skills"
+ref = "0cc1c73a5e96749ab32d7ea5e14892fafa6972ae"
+license = "CC-BY-SA-4.0 (Trail of Bits)"
+
+[sources.karpathy]
+repo = "forrestchang/andrej-karpathy-skills"
+ref = "2c606141936f1eeef17fa3043a72095b4765b9c2"
+license = "MIT"
+
+[sources.mattpocock]
+repo = "mattpocock/skills"
+ref = "c55ee46073ed923f86ce59a5eb3b6d895095d1b7"
+license = "MIT"
+
+[sources.ui-ux-pro-max]
+repo = "nextlevelbuilder/ui-ux-pro-max-skill"
+ref = "09170eec67eefd46a7ae85de61b40c194020f997"
+license = "MIT"
+
+[sources.impeccable]
+repo = "pbakaus/impeccable"
+ref = "114ea1d3838fca73b253af45f873b9c4f5f213c8"
+license = "Apache-2.0"
+
+[sources.figma]
+repo = "figma/mcp-server-guide"
+ref = "172920731eedf414e9b22ae60017d9a5b6c9f81f"
+license = "plugin oficial da Figma (termos da Figma)"
+
+# ------------------------------------------------------------------------------------ skills próprias
+[[skills]]
+name = "sabatina"
+source = "local"
+path = "skills/sabatina"
+roles = ["planner"]
+tags = ["all"]
+preload = ["planner"]
+
+[[skills]]
+name = "plano-tecnico"
+source = "local"
+path = "skills/plano-tecnico"
+roles = ["planner", "reviewer"]
+tags = ["all"]
+
+[[skills]]
+name = "tickets-verticais"
+source = "local"
+path = "skills/tickets-verticais"
+roles = ["planner", "builder"]
+tags = ["all"]
+preload = ["builder"]
+
+[[skills]]
+name = "arquitetura-livre"
+source = "local"
+path = "skills/arquitetura-livre"
+roles = ["planner", "builder", "tester", "reviewer", "security"]
+tags = ["all"]
+preload = ["planner"]
+
+[[skills]]
+name = "receita-python-fastapi"
+source = "local"
+path = "skills/receita-python-fastapi"
+roles = ["planner", "builder", "tester", "reviewer"]
+tags = ["all"]
+
+[[skills]]
+name = "testes-unitarios"
+source = "local"
+path = "skills/testes-unitarios"
+roles = ["builder"]
+tags = ["all"]
+preload = ["builder"]
+
+[[skills]]
+name = "testes-que-importam"
+source = "local"
+path = "skills/testes-que-importam"
+roles = ["tester", "reviewer"]
+tags = ["all"]
+preload = ["tester"]
+
+[[skills]]
+name = "mutation-testing-mutmut"
+source = "local"
+path = "skills/mutation-testing-mutmut"
+roles = ["tester"]
+tags = ["all"]
+preload = ["tester"]
+
+[[skills]]
+name = "acessibilidade"
+source = "local"
+path = "skills/acessibilidade"
+roles = ["designer", "builder", "tester", "evaluator"]
+tags = ["ui"]
+
+[[skills]]
+name = "manutencao"
+source = "local"
+path = "skills/manutencao"
+roles = ["planner", "builder", "tester"]
+tags = ["all"]
+
+[[skills]]
+name = "api-design"
+source = "local"
+path = "skills/api-design"
+roles = ["planner", "builder", "tester", "reviewer"]
+tags = ["all"]
+
+[[skills]]
+name = "banco-de-dados"
+source = "local"
+path = "skills/banco-de-dados"
+roles = ["builder", "reviewer"]
+tags = ["all"]
+
+[[skills]]
+name = "seguranca-web"
+source = "local"
+path = "skills/seguranca-web"
+roles = ["builder", "security"]
+tags = ["all"]
+preload = ["security"]
+
+[[skills]]
+name = "observabilidade"
+source = "local"
+path = "skills/observabilidade"
+roles = ["builder", "reviewer"]
+tags = ["all"]
+
+[[skills]]
+name = "docker-deploy"
+source = "local"
+path = "skills/docker-deploy"
+roles = ["builder"]
+tags = ["all"]
+
+[[skills]]
+name = "readme-vitrine"
+source = "local"
+path = "skills/readme-vitrine"
+roles = ["builder"]
+tags = ["all"]
+
+[[skills]]
+name = "frontend"
+source = "local"
+path = "skills/frontend"
+roles = ["designer", "builder", "evaluator"]
+tags = ["ui"]
+preload = ["designer"]
+
+[[skills]]
+name = "design-system"
+source = "local"
+path = "skills/design-system"
+roles = ["designer", "builder"]
+tags = ["ui"]
+preload = ["designer"]
+
+[[skills]]
+name = "figma-no-pipeline"
+source = "local"
+path = "skills/figma-no-pipeline"
+roles = ["designer", "builder"]
+tags = ["figma"]
+preload = ["designer"]
+
+[[skills]]
+name = "receita-fastapi-react"
+source = "local"
+path = "skills/receita-fastapi-react"
+roles = ["planner", "builder", "tester"]
+tags = ["react", "ui"]
+
+[[skills]]
+name = "dados-etl"
+source = "local"
+path = "skills/dados-etl"
+roles = ["planner", "builder", "tester", "evaluator"]
+tags = ["data"]
+
+[[skills]]
+name = "integracao-llm"
+source = "local"
+path = "skills/integracao-llm"
+roles = ["planner", "builder", "tester", "security"]
+tags = ["llm"]
+
+# ------------------------------------------------------------------------------------ Anthropic
+[[skills]]
+name = "frontend-design"
+source = "anthropic-skills"
+path = "skills/frontend-design"
+roles = ["designer", "builder", "evaluator"]
+tags = ["ui"]
+preload = ["designer"]
+
+[[skills]]
+name = "webapp-testing"
+source = "anthropic-skills"
+path = "skills/webapp-testing"
+roles = ["builder", "tester", "evaluator"]
+tags = ["ui"]
+
+[[skills]]
+name = "claude-api"
+source = "anthropic-skills"
+path = "skills/claude-api"
+roles = ["builder"]
+tags = ["llm"]
+
+[[skills]]
+name = "mcp-builder"
+source = "anthropic-skills"
+path = "skills/mcp-builder"
+roles = ["builder"]
+tags = ["mcp"]
+
+# ------------------------------------------------------------------------------------ superpowers
+[[skills]]
+name = "systematic-debugging"
+source = "superpowers"
+path = "skills/systematic-debugging"
+roles = ["builder", "tester"]
+tags = ["all"]
+
+[[skills]]
+name = "verification-before-completion"
+source = "superpowers"
+path = "skills/verification-before-completion"
+roles = ["designer", "builder", "tester"]
+tags = ["all"]
+preload = ["builder"]
+
+# ------------------------------------------------------------------------------------ Matt Pocock
+# Só as skills acionáveis pelo modelo (as de sabatina/tickets dele esperam um humano no terminal;
+# a técnica delas foi adaptada nas skills próprias `sabatina` e `tickets-verticais`).
+[[skills]]
+name = "tdd"
+source = "mattpocock"
+path = "skills/engineering/tdd"
+roles = ["builder"]
+tags = ["all"]
+preload = ["builder"]
+
+[[skills]]
+name = "diagnosing-bugs"
+source = "mattpocock"
+path = "skills/engineering/diagnosing-bugs"
+roles = ["builder", "tester"]
+tags = ["all"]
+
+[[skills]]
+name = "domain-modeling"
+source = "mattpocock"
+path = "skills/engineering/domain-modeling"
+roles = ["planner"]
+tags = ["all"]
+
+[[skills]]
+name = "codebase-design"
+source = "mattpocock"
+path = "skills/engineering/codebase-design"
+roles = ["planner", "builder", "reviewer"]
+tags = ["all"]
+
+# ------------------------------------------------------------------------------------ design
+[[skills]]
+name = "ui-ux-pro-max"          # base offline de estilos, paletas, fontes e regras de UX (script de busca)
+source = "ui-ux-pro-max"
+path = ".claude/skills/ui-ux-pro-max"
+roles = ["designer", "builder"]
+tags = ["ui"]
+
+[[skills]]
+name = "impeccable"             # direção de arte + detector de 61 anti-padrões ("cara de IA") sem LLM
+source = "impeccable"
+path = ".claude/skills/impeccable"
+roles = ["designer", "evaluator"]
+tags = ["ui"]
+
+# ------------------------------------------------------------------------------------ outras fontes
+[[skills]]
+name = "karpathy-guidelines"
+source = "karpathy"
+path = "skills/karpathy-guidelines"
+roles = ["planner", "builder", "reviewer"]
+tags = ["all"]
+preload = ["reviewer"]
+
+[[skills]]
+name = "web-design-guidelines"
+source = "vercel"
+path = "skills/web-design-guidelines"
+roles = ["designer", "evaluator", "reviewer"]
+tags = ["ui"]
+
+[[skills]]
+name = "react-best-practices"
+source = "vercel"
+path = "skills/react-best-practices"
+roles = ["builder", "reviewer"]
+tags = ["react"]
+
+[[skills]]
+name = "composition-patterns"
+source = "vercel"
+path = "skills/composition-patterns"
+roles = ["builder"]
+tags = ["react"]
+
+[[skills]]
+name = "property-based-testing"
+source = "trailofbits"
+path = "plugins/property-based-testing/skills/property-based-testing"
+roles = ["tester"]
+tags = ["all"]
+
+[[skills]]
+name = "differential-review"
+source = "trailofbits"
+path = "plugins/differential-review/skills/differential-review"
+roles = ["security"]
+tags = ["all"]
+preload = ["security"]
+
+[[skills]]
+name = "semgrep"
+source = "trailofbits"
+path = "plugins/static-analysis/skills/semgrep"
+roles = ["security"]
+tags = ["all"]
+
+[[skills]]
+name = "figma-use"
+source = "figma"
+path = "skills/figma-use"
+roles = ["designer"]
+tags = ["figma"]
+
+[[skills]]
+name = "figma-create-new-file"
+source = "figma"
+path = "skills/figma-create-new-file"
+roles = ["designer"]
+tags = ["figma"]
+
+[[skills]]
+name = "figma-generate-library"
+source = "figma"
+path = "skills/figma-generate-library"
+roles = ["designer"]
+tags = ["figma"]
+
+[[skills]]
+name = "figma-generate-design"
+source = "figma"
+path = "skills/figma-generate-design"
+roles = ["designer"]
+tags = ["figma"]
+
+[[skills]]
+name = "figma-design-to-code"
+source = "figma"
+path = "skills/figma-design-to-code"
+roles = ["builder"]
+tags = ["figma"]
+
+# ------------------------------------------------------------------------------------ plugins
+# Carregados com --plugin-dir. Trazem hooks, subagentes ou servidores de linguagem (LSP).
+[[plugins]]
+name = "agente-lsp"          # Pyright + TypeScript: diagnósticos de tipo injetados após cada edição
+source = "local"
+path = "plugins/agente-lsp"
+roles = ["builder", "tester", "reviewer"]
+
+[[plugins]]
+name = "security-guidance"   # avisos de padrões perigosos a cada edição + revisão do diff (oficial)
+source = "claude-plugins-official"
+path = "plugins/security-guidance"
+roles = ["builder"]
+toggle = "ENABLE_SECURITY_GUIDANCE"
+
+[[plugins]]
+name = "pr-review-toolkit"   # subagentes oficiais: silent-failure-hunter, pr-test-analyzer, code-simplifier…
+source = "claude-plugins-official"
+path = "plugins/pr-review-toolkit"
+roles = ["reviewer"]
+
+# ------------------------------------------------------------------------------------ MCP
+# scope = "session": o orquestrador passa por --mcp-config em cada sessão.
+# scope = "user": registrado uma vez no usuário `agent` (precisa de login/chave); a sessão só
+#                 bloqueia quando o papel não pode usar.
+# deny  = ferramentas específicas bloqueadas para certos papéis (ex.: builder só lê o Figma).
+[mcp.playwright]
+scope = "session"
+command = "mcp-server-playwright"
+args = ["--headless", "--isolated", "--browser", "chromium", "--viewport-size", "1366,900", "--output-dir", ".harness/evidence"]
+roles = ["designer", "builder", "tester", "evaluator"]
+
+[mcp.chrome-devtools]
+scope = "session"
+command = "chrome-devtools-mcp"
+args = ["--headless", "--isolated", "--executablePath={chromium}"]
+roles = ["evaluator"]
+
+[mcp.shadcn]                     # registro de componentes shadcn/ui (busca, exemplos, comando de add)
+scope = "session"
+command = "shadcn"                 # instalado na imagem (shadcn@4.21.0)
+args = ["mcp"]
+roles = ["designer", "builder"]
+tags = ["react"]
+
+[mcp.context7]
+scope = "user"
+url = "https://mcp.context7.com/mcp"
+roles = ["planner", "designer", "builder", "tester", "security", "reviewer"]
+
+[mcp.figma]
+scope = "user"
+url = "https://mcp.figma.com/mcp"
+requires = "FIGMA_ENABLED"
+roles = ["designer", "builder"]
+
+[mcp.figma.deny]
+builder = ["use_figma", "create_new_file", "generate_figma_design", "upload_assets",
+           "generate_diagram", "add_code_connect_map", "send_code_connect_mappings",
+           "create_generative_plugin", "update_generative_plugin", "create_shader", "update_shader"]

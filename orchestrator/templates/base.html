@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>{% block title %}Agente{% endblock %} · Agente de Portfólio</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/"><span class="led led-on"></span> agente<span class="dim">/portfólio</span></a>
+    <nav>
+      <a href="/">Painel</a>
+      <a href="/new">Novo projeto</a>
+      <a href="/harness">Harness</a>
+      <a href="/lessons">Lições</a>
+      <a href="/infra">Infra</a>
+      <form method="post" action="/logout"><button class="link">Sair</button></form>
+    </nav>
+  </header>
+  <main>
+    {% if flash %}<div class="flash">{{ flash }}</div>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>
