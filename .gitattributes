@@ -1,0 +1,7 @@
+# Tudo com fim de linha LF, inclusive no Windows: os scripts rodam no Linux do VPS
+# (um .sh com CRLF quebra o bash com "$'\r': command not found").
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary

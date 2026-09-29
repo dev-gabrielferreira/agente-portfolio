@@ -95,8 +95,13 @@ fi
 sec "2. Orquestrador (container agente)"
 if running agente; then
   ok "container agente rodando"
-  docker exec agente curl -fsS --max-time 10 http://127.0.0.1:8080/healthz >/dev/null 2>&1 \
-    && ok "painel responde dentro do container" || fail "painel não responde: docker logs agente"
+  # logo depois de um "docker compose up" o painel ainda está subindo: espera até 90 s antes de acusar
+  up=0
+  for _ in $(seq 1 30); do
+    docker exec agente curl -fsS --max-time 5 http://127.0.0.1:8080/healthz >/dev/null 2>&1 && { up=1; break; }
+    sleep 3
+  done
+  (( up )) && ok "painel responde dentro do container" || fail "painel não responde há 90 s: docker logs --tail 60 agente"
   if docker exec agente runuser -u agent -- docker ps >/dev/null 2>&1; then
     fail "o usuário agent (quem escreve código) consegue usar o Docker: não deveria"
   else
