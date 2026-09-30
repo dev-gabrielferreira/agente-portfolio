@@ -107,4 +107,6 @@ def copy_file(src: Path, base: Path, rel: str | Path, mode: int | None = None) -
     """Copia um arquivo do harness (confiável) para dentro do projeto sem seguir links do destino."""
     path = write_bytes(base, rel, src.read_bytes(), mode if mode is not None else (src.stat().st_mode & 0o777))
     shutil.copystat(src, path)
+    if mode is not None:  # copystat copia também a permissão da origem; o modo pedido vale mais
+        os.chmod(path, mode)
     return path

@@ -190,6 +190,8 @@ def restore_gates(template: Path, pdir: Path) -> list[str]:
             if os.path.lexists(dst):
                 changed.append(rel)
             safefs.copy_file(src, pdir, rel, mode=0o755)
+        elif not os.access(dst, os.X_OK):  # conteúdo certo, mas sem permissão de execução
+            os.chmod(dst, 0o755)
     return changed
 
 
